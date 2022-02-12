@@ -81,6 +81,8 @@ E0Land:
 	DEX
 	STX.w MDMAEN
 
+	STZ.w OAMADDR
+
 	LDA.w #$0408
 	STA.b DMA0MODE
 
