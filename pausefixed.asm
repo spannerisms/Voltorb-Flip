@@ -11,11 +11,8 @@ PrepareHelpBox:
 
 .next_empty
 	JSR AddEmptyHelpRow
-
 	DEC.b SCRATCH
 	BNE .next_empty
-
-;---------------------------------------------------------------------------------------------------
 
 	JSR AddHelpTop
 
@@ -33,8 +30,6 @@ PrepareHelpBox:
 	JSR AddHelpBottom
 	JSR AddEmptyHelpRow
 
-;---------------------------------------------------------------------------------------------------
-
 	LDA.w #$2CCC
 
 	LDX.w #$0554
@@ -49,12 +44,10 @@ PrepareHelpBox:
 	LDX.w #$0654
 	JSR DrawSpecialHintVWF
 
-;---------------------------------------------------------------------------------------------------
-
-	LDA.w #$6C37
+	LDA.w #$6C1C
 	STA.w PAUSEMAP+$552
 
-	LDA.w #$2C37
+	LDA.w #$2C1C
 	STA.w PAUSEMAP+$54A
 
 	INC
@@ -78,19 +71,19 @@ PrepareHelpBox:
 	STZ.w PAUSEMAP+$60E
 	STZ.w PAUSEMAP+$610
 
-	LDA.w #$2C49
+	LDA.w #$2C1F
 	STA.w PAUSEMAP+$592
 
-	LDA.w #$AC49
+	LDA.w #$AC1F
 	STA.w PAUSEMAP+$612
 
-	LDA.w #$6C39
+	LDA.w #$6C1E
 	STA.w PAUSEMAP+$5D2
 
-	LDA.w #$EC37
+	LDA.w #$EC1C
 	STA.w PAUSEMAP+$652
 
-	LDA.w #$AC37
+	LDA.w #$AC1C
 	STA.w PAUSEMAP+$64A
 
 	INC
@@ -98,9 +91,11 @@ PrepareHelpBox:
 	STA.w PAUSEMAP+$64E
 	STA.w PAUSEMAP+$650
 
-;---------------------------------------------------------------------------------------------------
+	LDA.w #$0100
+	STA.b BG3HOFF
 
-	JSR ConfigureForPause
+	LDA.w #$0707
+	STA.b TMQ
 
 	LDA.w #NMIVector(NMI_TransferPauseMenu)
 	JSR AddVectorAndWaitForNMI
@@ -118,6 +113,25 @@ PrepareHelpBox:
 
 	LDA.w #vma(!BG3CHR+$0CC0)
 	STA.b VWFV
+
+	BRA DrawNextVWFText
+
+;===================================================================================================
+
+DrawSpecialHintVWF:
+	LDY.w #13
+
+.next
+	STA.w PAUSEMAP,X
+	INC
+
+	INX
+	INX
+
+	DEY
+	BNE .next
+
+	RTS
 
 ;===================================================================================================
 
@@ -148,22 +162,6 @@ DrawNextVWFText:
 
 ;===================================================================================================
 
-DrawSpecialHintVWF:
-	LDY.w #13
-
-;===================================================================================================
-
-DrawPauseVWF:
-	JSR AddHelpChar
-
-	INC
-	DEY
-	BNE DrawPauseVWF
-
-	RTS
-
-;===================================================================================================
-
 HelpText:
 	db "Clear the level by uncovering every", $FF
 	db "hidden ", $56, "2 and ", $56, "3 multiplier card.", $FF
@@ -178,23 +176,42 @@ AddBlankHelpThen2Rows:
 	JSR AddBlankHelpRow
 	PLA
 
-;===================================================================================================
-
 AddNext2VWFRows:
 	JSR AddNextVWFRow
 
-;===================================================================================================
-
 AddNextVWFRow:
 	PHA
-	JSR AddHelpRowStartEdge
+
+	JSR AddEmptyHelpChar
+
+	LDA.w #$2016
+	JSR AddHelpChar
+
 	PLA
 
 	LDY.w #26
-	JSR DrawPauseVWF
+
+.next
+	JSR AddHelpChar
+
+	INC
+
+	DEY
+	BNE .next
 
 	PHA
-	JSR AddHelpRowEndEdge
+
+	LDA.w #$2019
+	JSR AddHelpChar
+
+	INC
+	JSR AddHelpChar
+
+	LDA.w #$6016
+	JSR AddHelpChar
+
+	JSR AddEmptyHelpChar
+
 	PLA
 
 	RTS
@@ -236,9 +253,6 @@ PrepareStatsBox:
 	LDA.w #NMIVector(NMI_TransferPauseMenu)
 	JSR AddNMIVector
 
-;===================================================================================================
-
-ConfigureForPause:
 	LDA.w #$0100
 	STA.b BG3HOFF
 
@@ -275,19 +289,21 @@ AddNextStatRow:
 
 	JSR AddHelpCharDouble
 
-	LDA.w #$2041
+	LDA.w #$2016
 	JSR AddHelpCharDouble
 
 ;---------------------------------------------------------------------------------------------------
 
 	; draw blanks until the first digit
-	LDA.w #$2C45
+	LDA.w #$2C1A
 
 .next_blank_digit
 	CPY.b SCRATCH+8
 	BCS .draw_numbers
 
-	JSR AddHelpCharDoubleINY
+	JSR AddHelpCharDouble
+
+	INY
 	BRA .next_blank_digit
 
 .draw_numbers
@@ -296,12 +312,14 @@ AddNextStatRow:
 
 	LDA.w BCDNUMS,Y
 	AND.w #$000F
-	ORA.w #$2C10
+	ORA.w #$2C20
 	JSR AddHelpCharStacked
+
+	INY
 	BRA .draw_numbers
 
 .done_numbers
-	LDA.w #$2C45
+	LDA.w #$2C1A
 	JSR AddHelpCharDouble
 
 	LDY.w #$0000
@@ -313,30 +331,41 @@ AddNextStatRow:
 
 	ORA.w #$2C00
 	JSR AddHelpCharStacked
+
+	INY
 	BRA .next_label
 
 ;---------------------------------------------------------------------------------------------------
 
 .fill_end
-	LDA.w #$2C45
+	LDA.w #$2C1A
 
 .next_blank
 	CPY.w #9
 	BCS .done_end_fill
 
-	JSR AddHelpCharDoubleINY
+	JSR AddHelpCharDouble
+
+	INY
 	BRA .next_blank
 
 .done_end_fill
+	LDA.w #$2019
+	JSR AddHelpCharDouble
+
+	INC
+	JSR AddHelpCharDouble
+
+	LDA.w #$6016
+	JSR AddHelpCharDouble
+
+	LDA.w #$0000
+	JSR AddHelpCharDouble
+
 	TXA
 	CLC
 	ADC.w #64
-	PHA
-
-	JSR AddHelpRowEndEdge
-
-	PLX
-	JSR AddHelpRowEndEdge
+	TAX
 
 	PLA
 
@@ -345,91 +374,93 @@ AddNextStatRow:
 ;===================================================================================================
 
 StatRowData:
-	dw CoinsChars,         WINNINGS
-	dw GamesPlayedChars,   GAMES
-	dw GamesWonChars,      WINS
-	dw GamesLostChars,     LOST
-	dw GamesQuitChars,     QUIT
-	dw CoinsLostChars,     COINSLOST
-	dw Flipped1Chars,      FLIPPED1
-	dw Flipped2Chars,      FLIPPED2
-	dw Flipped3Chars,      FLIPPED3
-	dw BestStreakChars,    STREAK
-	dw MaxLevelChars,      DUMB
-	dw BoldMoveChars,      RISKYMOVES
+	dw CoinsChars, WINNINGS
+	dw GamesPlayedChars, GAMES
+	dw GamesWonChars, WINS
+	dw GamesLostChars, LOST
+	dw GamesQuitChars, QUIT
+	dw CoinsLostChars, COINSLOST
+	dw Flipped1Chars, FLIPPED1
+	dw Flipped2Chars, FLIPPED2
+	dw Flipped3Chars, FLIPPED3
+	dw BestStreakChars, STREAK
+	dw MaxLevelChars, DUMB
+	dw BoldMoveChars, RISKYMOVES
 
 ;---------------------------------------------------------------------------------------------------
 
+pushtable
+
+table "fixedwidthmap.txt"
+
+
 CoinsChars:
-	db $50, $51, $52, $53, $00
+	db "Coins", $00
 
 GamesPlayedChars:
-	db $70, $71, $72, $73, $0A, $0B, $0C, $0D, $0E, $00
+	db "Games played", $00
 
 GamesWonChars:
-	db $70, $71, $72, $73, $74, $75, $76, $00
+	db "Games won", $00
 
 GamesLostChars:
-	db $70, $71, $72, $73, $77, $78, $79, $00
+	db "Games lost", $00
 
 GamesQuitChars:
-	db $70, $71, $72, $73, $7A, $7B, $7C, $00
+	db "Games quit". $00
 
 CoinsLostChars:
-	db $50, $51, $52, $54, $55, $56, $57, $00
+	db "Coins lost". $00
 
 Flipped1Chars:
-	db $58, $59, $2A, $2B, $2C, $0D, $0E, $00
+	db "*1 flipped". $00
 
 Flipped2Chars:
-	db $5A, $5B, $2A, $2B, $2C, $0D, $0E, $00
+	db "*2 flipped". $00
 
 Flipped3Chars:
-	db $5C, $5D, $2A, $2B, $2C, $0D, $0E, $00
+	db "*3 flipped". $00
 
 BestStreakChars:
-	db $90, $91, $92, $93, $94, $95, $96, $97, $00
+	db "Best streak". $00
 
 MaxLevelChars:
-	db $98, $99, $9A, $9B, $9C, $9D, $00
+	db "Max level". $00
 
 BoldMoveChars:
-	db $B0, $B1, $B2, $B3, $B4, $B5, $B6, $00
+	db "". $00
 
 ;===================================================================================================
 
 AddHelpTop:
-	LDA.w #$2031
-	JSR AddHelpRowStart
+	JSR AddEmptyHelpChar
 
-	INC
-	JSR AddHelpChar
-
-	INC
-	JSR FillHelpRow25
-
-	INC
+	LDA.w #$2010
 	JSR AddHelpChar
 
 	INC
 	JSR AddHelpChar
 
-	LDA.w #$6031
-	BRA AddHelpRowEnd
+	INC
 
-;===================================================================================================
+	LDY.w #25
 
-AddBlankHelpBottomRow:
-	JSR AddHelpRowStartEdge
-
-	LDA.w #$2036
+.next
 	JSR AddHelpChar
 
-	LDA.w #$2C45
-	JSR FillHelpRow25
+	DEY
+	BNE .next
 
-	LDA.w #$2046
-	BRA AddHelpRowEndEdgePiece
+	INC
+	JSR AddHelpChar
+
+	INC
+	JSR AddHelpChar
+
+	LDA.w #$6010
+	JSR AddHelpChar
+
+	BRA AddEmptyHelpChar
 
 ;===================================================================================================
 
@@ -437,51 +468,83 @@ Add2BlankHelpRows:
 	JSR AddBlankHelpRow
 
 AddBlankHelpRow:
-	JSR AddHelpRowStartEdge
+	JSR AddEmptyHelpChar
 
-	LDA.w #$2C45
+	LDA.w #$2016
+	JSR AddHelpChar
+
+	LDA.w #$2C1A
+
 	LDY.w #26
-	JSR FillHelpRow
 
-;===================================================================================================
-
-AddHelpRowEndEdge:
-	LDA.w #$2044
-
-;===================================================================================================
-
-AddHelpRowEndEdgePiece:
+.next
 	JSR AddHelpChar
 
-	LDA.w #$2045
+	DEY
+	BNE .next
+
+	LDA.w #$2019
 	JSR AddHelpChar
 
-	LDA.w #$6041
+	INC
+	JSR AddHelpChar
+
+	LDA.w #$6016
+	JSR AddHelpChar
+
+	BRA AddEmptyHelpChar
 
 ;===================================================================================================
 
-AddHelpRowEnd:
+AddBlankHelpBottomRow:
+	JSR AddEmptyHelpChar
+
+	LDA.w #$2016
 	JSR AddHelpChar
+
+	LDA.w #$2015
+	JSR AddHelpChar
+
+	LDA.w #$2C1A
+
+	LDY.w #25
+
+.next
+	JSR AddHelpChar
+
+	DEY
+	BNE .next
+
+	LDA.w #$201B
+	JSR AddHelpChar
+
+	DEC
+	JSR AddHelpChar
+
+	LDA.w #$6016
+	JSR AddHelpChar
+
+	BRA AddEmptyHelpChar
 
 ;===================================================================================================
 
-AddEmptyHelpChar:
-	STZ.w PAUSEMAP,X
+AddEmptyHelpRow:
+	LDY.w #32
 
-	INX
-	INX
+	LDA.w #$0000
+
+.next
+	JSR AddHelpChar
+
+	DEY
+	BNE .next
 
 	RTS
 
 ;===================================================================================================
 
-AddHelpRowStartEdge:
-	LDA.w #$2041
-
-;===================================================================================================
-
-AddHelpRowStart:
-	JSR AddEmptyHelpChar
+AddEmptyHelpChar:
+	LDA.w #$0000
 
 ;===================================================================================================
 
@@ -496,21 +559,27 @@ AddHelpChar:
 ;===================================================================================================
 
 AddHelpBottom:
-	LDA.w #$2442
-	JSR AddHelpRowStart
+	JSR AddEmptyHelpChar
+
+	LDA.w #$2417
+	JSR AddHelpChar
 
 	INC
 
 	LDY.w #28
-	JSR FillHelpRow
 
-	LDA.w #$6442
-	BRA AddHelpRowEnd
+.next
+	JSR AddHelpChar
+
+	DEY
+	BNE .next
+
+	LDA.w #$6417
+	JSR AddHelpChar
+
+	BRA AddEmptyHelpChar
 
 ;===================================================================================================
-
-AddHelpCharDoubleINY:
-	INY
 
 AddHelpCharDouble:
 	STA.w PAUSEMAP+64,X
@@ -527,28 +596,6 @@ AddHelpCharStacked:
 
 	INX
 	INX
-	INY
-
-	RTS
-
-;===================================================================================================
-
-AddEmptyHelpRow:
-	LDY.w #32
-	LDA.w #$0000
-
-	BRA FillHelpRow
-
-;===================================================================================================
-
-FillHelpRow25:
-	LDY.w #25
-
-FillHelpRow:
-	JSR AddHelpChar
-
-	DEY
-	BNE FillHelpRow
 
 	RTS
 

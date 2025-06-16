@@ -1,3 +1,174 @@
+;===================================================================================================
+
+Win:
+	db "Game clear!", $FF
+
+OhNo:
+	db "Oh no! You get 0 Coins!", $FF
+
+Dropped:
+	db "Dropped to Game Lv. ", $80, ".", $FF
+
+Advanced:
+	db "Advanced to Game Lv. ", $80, "!", $FF
+
+Forfeit:
+	db "Press ", $46, " to quit; ", $47, " to continue.", $FF
+
+;===================================================================================================
+
+DisplayDarkTextBox:
+	PHA
+
+	JSR DarkenGameBoard
+
+	PLA
+
+;===================================================================================================
+
+DisplayTextBox:
+	STA.b SAFESCRATCH
+
+	PHP
+
+	LDA.w #$1717
+	STA.b TMQ
+
+	JSR ResetVWF
+
+	LDA.w #vma(!VWFCHR)
+	STA.b VWFV
+
+	LDA.w #NMIVector(NMI_TransferTextChars)
+	JSR AddVectorAndWaitForNMI
+
+	LDA.w #3
+
+.next_char
+	JSR DrawOneCharFrame
+
+	LDA.b (SAFESCRATCH)
+	INC.b SAFESCRATCH
+
+	AND.w #$00FF
+	CMP.w #$0080
+	BCC .next_char
+	BEQ .draw_level
+
+.done
+	PLP
+	RTS
+
+.draw_level
+	LDA.b LEVEL
+	AND.w #$000F
+	ADC.w #$0007
+
+	BRA .next_char
+
+;===================================================================================================
+
+DisplayDarkTextBoxForLong:
+	JSR DisplayDarkTextBox
+
+	SEP #$10
+
+	LDX.b #120
+	JSR WaitForNMI_x_times
+
+;===================================================================================================
+
+BrightNoBG3:
+	PHP
+	REP #$20
+
+	LDA.w #$1313
+	STA.b TMQ
+	STZ.b CGWSELQ
+
+	PLP
+	RTS
+
+;===================================================================================================
+
+DarkenGameBoard:
+	PHP
+	REP #$20
+
+	LDA.w #$E1E3
+	STZ.b CGWSELQ
+	STA.b CGADSUBQ
+
+	PLP
+	RTS
+
+;===================================================================================================
+
+SplitBCD:
+	REP #$30
+	TAX
+
+	LDA.w $0006,X
+	XBA
+	STA.b SCRATCH+6
+
+	LDA.w $0004,X
+	XBA
+	STA.b SCRATCH+4
+
+	LDA.w $0002,X
+	XBA
+	STA.b SCRATCH+2
+
+	LDA.w $0000,X
+	XBA
+	STA.b SCRATCH+0
+
+;---------------------------------------------------------------------------------------------------
+
+	SEP #$30
+
+	LDX.b #$07
+	LDY.b #$10
+
+.next_split
+	LDA.b SCRATCH,X
+	AND.b #$0F
+	STA.w BCDNUMS-1,Y
+
+	DEY
+
+	LDA.b SCRATCH,X
+	LSR
+	LSR
+	LSR
+	LSR
+	STA.w BCDNUMS-1,Y
+
+	DEY
+	DEX
+	BPL .next_split
+
+;---------------------------------------------------------------------------------------------------
+
+	LDX.b #$00
+
+.find_first_nonzero_digit
+	LDA.w BCDNUMS,X
+	BNE .found_digit
+
+	INX
+	CPX.b #15
+	BCC .find_first_nonzero_digit
+
+.found_digit
+	TXA
+	ASL
+	TAY
+
+	REP #$20
+
+	RTS
 
 ;===================================================================================================
 
@@ -12,34 +183,30 @@ ResetVWF:
 	LDX.w #$1A0
 	LDA.w #$FFFF
 
---	STA.w VWFB1-2,X
+.clear
+	STA.w VWFB1-2,X
 	STA.w VWFB2-2,X
 
 	DEX
 	DEX
-	BNE --
+	BNE .clear
 
-	RTL
+	RTS
 
 ;===================================================================================================
 
 DrawOneCharFrame:
-	JSL DrawLetterToVWF
+	JSR DrawLetterToVWF
 
-	LDA.w #$7000>>1
+	LDA.w #vma(!VWFCHR)
 	STA.b VWFV
 
-	LDA.w #NMI_TransferTextChars
-	JSL AddNMIVector
-	JML WaitForNMI
+	LDA.w #NMIVector(NMI_TransferTextChars)
+	JMP AddVectorAndWaitForNMI
 
 ;===================================================================================================
 
 DrawLetterToVWF:
-	PHB
-	PHK
-	PLB
-
 	PHP
 
 	REP #$30
@@ -54,12 +221,13 @@ DrawLetterToVWF:
 
 	; for spaces, which are 0-7, just use first char always
 	CMP.w #$0008
-	BCS ++
+	BCS .not_space
 
 	LDA.w #$0000
 	BRA .add
 
-++	SBC.w #$0007
+.not_space
+	SBC.w #$0007
 
 	ASL
 	ASL
@@ -147,7 +315,7 @@ DrawLetterToVWF:
 	STZ.b VWF2B
 
 	LDX.b VWFS
-	BEQ ++
+	BEQ .no_shift
 
 	SEP #$20
 
@@ -169,7 +337,8 @@ DrawLetterToVWF:
 
 	REP #$20
 
-++	LDX.w VWFX
+.no_shift
+	LDX.w VWFX
 
 	LDA.w VWFB1+16,X
 	AND.b VWFMSB
@@ -203,9 +372,8 @@ DrawLetterToVWF:
 	REP #$30
 	PLX : PLY
 	PLP
-	PLB
 
-	RTL
+	RTS
 
 .size_masks
 	dw $0000

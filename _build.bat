@@ -1,3 +1,3 @@
 type nul >voltorbflip.sfc
-asar --fix-checksum=on main.asm voltorbflip.sfc
+asar --symbols=wla --fix-checksum=on main.asm voltorbflip.sfc
 pause

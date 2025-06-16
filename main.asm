@@ -5,6 +5,8 @@ math pri on
 arch 65816
 
 org $808000
+incsrc "registers.asm"
+incsrc "defines.asm"
 incsrc "ram.asm"
 table "charmap.txt"
 
@@ -24,9 +26,11 @@ org $808000
 incsrc "bank00.asm"
 incsrc "nmi.asm"
 incsrc "pause.asm"
-incsrc "vwf.asm"
-
+incsrc "text.asm"
 incsrc "game.asm"
+incsrc "animation.asm"
+
+print "Code end: ", pc
 
 incsrc "header.asm"
 

@@ -26,18 +26,18 @@ dw #$0000
 FFLand:
 dw $FFFF
 dw $FFFF
-dw Vector_None
-dw Vector_None
-dw Vector_None
-dw Vector_NMI
-dw Vector_Reset
-dw Vector_None
+dw NoVector
+dw NoVector
+dw NoVector
+dw NMI
+dw Reset
+dw NoVector
 
 dw $FFFF
 dw $FFFF
-dw Vector_None
+dw NoVector
 dw $FFFF
-dw Vector_None
-dw Vector_NMI
-dw Vector_Reset
-dw Vector_None
+dw NoVector
+dw NMI
+dw Reset
+dw NoVector

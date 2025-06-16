@@ -1,46 +1,6 @@
-BOARDMAP = $0000
-NOTESMAP = $0800
-
 ;===================================================================================================
 
 SRAMBASE = $B16000
-
-;===================================================================================================
-; Specific registers I'll actually use
-;===================================================================================================
-INIDISP = $002100
-OAMADDR = $002102
-OAMDATA = $002104
-VMAIN = $002115
-VMADDR = $002116
-VMDATA = $002118
-PPUMULT16 = $00211B
-PPUMULT8 = $00211C
-CGADD = $002121
-MPYM = $002135
-APUIO = $002140
-APUIO0 = $002140
-APUIO1 = $002141
-APUIO2 = $002142
-APUIO3 = $002143
-NMITIMEN = $004200
-CPUDIVIDEND = $004204
-CPUDIVISOR = $004206
-MDMAEN = $00420B
-CPUQUOTIENT = $004214
-CPUREMAINDER = $004216
-DMA0MODE = $004300
-DMA1MODE = $004310
-DMA7MODE = $004370
-DMA0ADDR = $004302
-DMA1ADDR = $004312
-DMA7ADDR = $004372
-DMA0ADDRB = $004304
-DMA1ADDRB = $004314
-DMA7ADDRB = $004374
-DMA0SIZE = $004305
-DMA1SIZE = $004315
-DMA7SIZE = $004375
 
 ;===================================================================================================
 ; Direct page
@@ -53,8 +13,9 @@ base $7E0000
 	NMIWAIT: skip 2
 	FRAME: skip 2
 
-	NMIVC: skip 2 ; NMI vector count
-	NMIVV: skip 2 ; NMI vector pointer
+	; NMI vectors
+	NMIVX: skip 2
+	NMIVSC: skip 2
 
 	; NMI Queues
 	INIDQ: skip 1
@@ -89,15 +50,14 @@ base $7E0000
 
 	LEVEL: skip 1
 
-	; number of 2 or 3s left to find, and number found
-	GOODLEFT: skip 1
-	GOODGOT: skip 1
+	; number of 2s/3s left to find
+	GOODLEFT: skip 2
+
 	FLIPPED: skip 1
 	GREAT: skip 1
 
 	COINS: skip 2
-	COINSDEC: skip 5
-	COINSDISP: skip 5
+	COINSDISP: skip 2
 	CURSOR: skip 1
 	CURX: skip 1
 	CURY: skip 1
@@ -133,22 +93,6 @@ warnpc $7E0100
 ; Mirrored WRAM
 ;===================================================================================================
 base $7E0100
-	; !! Keep this here for easy NMI vectoring
-	NMIV: skip 2*16 ; NMI vector list
-
-	skip 20
-
-	COINCHARS0: skip 16
-	COINCHARS1: skip 16
-	COINCHARS2: skip 16
-
-	skip 20
-
-	EXPLSX: skip 2
-
-	EXPLOSIONOAM: skip 16
-
-base $7E0200
 	; u... tttt
 	;   u - update during nmi
 	;   t - tile to show
@@ -167,18 +111,25 @@ base $7E0200
 	; .vvv ssss
 	;   s - row total
 	;   v - voltorb count
-	HINTSV: skip 5
+	HINTSR: skip 5
 
 	; .vvv ssss
 	;   s - column total
 	;   v - voltorb count
-	HINTSH: skip 5
+	HINTSC: skip 5
 
-	; rows first, then columns
-	HINTNUMTILES: skip 40
-	VOLTNUMTILES: skip 20
+	ROWFLIPS: skip 5
+	COLFLIPS: skip 5
 
-	skip 5
+	COINCHARS0: skip 16
+	COINCHARS1: skip 16
+	COINCHARS2: skip 16
+
+	skip 8
+
+	EXPLSX: skip 2
+
+	EXPLOSIONOAM: skip 16
 
 	DUMB: skip 8
 
@@ -186,6 +137,8 @@ base $7E0200
 
 	TOTALTILESA: skip 32
 	TOTALTILESB: skip 32
+
+	BRDUPDATEX: skip 2
 
 ;---------------------------------------------------------------------------------------------------
 
@@ -226,6 +179,8 @@ base $7E0800
 	; not sure yet
 	MAXLEVEL: skip 1
 
+	RISKYMOVES: skip 8
+
 base $7E0880
 	CURSTREAK: skip 8
 
@@ -237,6 +192,16 @@ base $7E0B00
 
 base $7E1000
 	PAUSEMAP: skip $0800
+	HINTSBUFFER: skip $0100
+
+
+
+NMIVTop = $7E1EFE
+
+
+BOARDUPDATES = $7E2000
+
+
 
 ;===================================================================================================
 
